@@ -1,1 +1,4 @@
 dist
+.yarn
+.husky
+node_modules
