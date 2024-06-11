@@ -1,6 +1,6 @@
 {
   "name": "di-at-home",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Simple dependency injection using ECMAscript decorators",
   "keywords": [
     "di",
@@ -11,8 +11,8 @@
   ],
   "license": "MIT",
   "type": "module",
-  "module": "dist/index.mjs",
-  "types": "dist/index.d.ts",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.mjs",
   "files": [
     "dist"
   ],
