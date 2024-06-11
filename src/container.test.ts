@@ -183,3 +183,28 @@ it("should inject transient instances", () => {
   expect(house.blue.name).toBe("large blue door");
   expect(cabin.door.name).toBe("small green door");
 });
+
+it("injected fields should be available inside constructor", () => {
+  const C = new ContainerInstance();
+
+  @C.Factory("door")
+  class DoorFactory {
+    public produce(size: string, color: string): IDoor {
+      return { name: `${size} ${color} door` };
+    }
+  }
+
+  class House {
+    @C.Transient("door", "large", "red")
+    public readonly door!: IDoor;
+
+    public readonly name: string;
+
+    constructor() {
+      this.name = `house with ${this.door.name}`;
+    }
+  }
+
+  const house = new House();
+  expect(house.name).toBe("house with large red door");
+});
