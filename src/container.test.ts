@@ -200,11 +200,12 @@ it("injected fields should be available inside constructor", () => {
 
     public readonly name: string;
 
-    constructor() {
-      this.name = `house with ${this.door.name}`;
+    constructor(style: string) {
+      this.door = { ...this.door, name: `wooden ${this.door.name}` };
+      this.name = `${style} house with ${this.door.name}`;
     }
   }
 
-  const house = new House();
-  expect(house.name).toBe("house with large red door");
+  const house = new House("rural");
+  expect(house.name).toBe("rural house with wooden large red door");
 });
