@@ -44,10 +44,11 @@ export class ContainerInstance<IM extends Mapping = any> {
           `cannot inject into private field '${String(context.name)}'`,
         );
       }
-      const instance = this.get(key);
-      this.#instances.set(key, instance);
+      const container = this;
       const fieldName = context.name;
       context.addInitializer(function (this: any) {
+        const instance = container.get(key);
+        container.#instances.set(key, instance);
         this[fieldName] = instance;
       });
     };
@@ -60,9 +61,10 @@ export class ContainerInstance<IM extends Mapping = any> {
           `cannot inject into private field '${String(context.name)}'`,
         );
       }
-      const instance = this.create(key, ...args);
-      const fieldName = context.name;
+      const container = this;
       context.addInitializer(function (this: any) {
+        const instance = container.create(key, ...args);
+        const fieldName = context.name;
         this[fieldName] = instance;
       });
     };

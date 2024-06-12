@@ -2,6 +2,7 @@ module.exports = {
   extends: ["alloy", "alloy/typescript"],
   rules: {
     "new-cap": "off",
+    "@typescript-eslint/no-this-alias": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
