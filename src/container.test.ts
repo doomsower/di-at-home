@@ -14,26 +14,9 @@ it("should inject simple public field", () => {
 
   @C.Injectable("door")
   class Door implements IDoor {
-    public name = "door";
-  }
-
-  class House {
-    @C.Inject("door")
-    public door!: Door;
-  }
-
-  const house = new House();
-  expect(house.door.name).toBe("door");
-});
-
-it("should inject only once", () => {
-  const C = new ContainerInstance();
-
-  @C.Injectable("door")
-  class Door implements IDoor {
     private static index = 0;
 
-    public constructor() {
+    constructor() {
       Door.index += 1;
     }
 
@@ -59,6 +42,7 @@ it("should inject only once", () => {
   const house = new House();
   expect(house.door.name).toBe("door 1");
   expect(house.room.door.name).toBe("door 1");
+  expect(house.room.door).toBe(house.door);
 });
 
 it("should inject into subclass", () => {
@@ -77,25 +61,6 @@ it("should inject into subclass", () => {
   class Townhouse extends House {}
 
   const house = new Townhouse();
-  expect(house.door.name).toBe("door");
-});
-
-it("should inject factory product", () => {
-  const C = new ContainerInstance();
-
-  @C.Factory("door")
-  class DoorFactory {
-    public produce(): IDoor {
-      return { name: "door" };
-    }
-  }
-
-  class House {
-    @C.Inject("door")
-    public door!: IDoor;
-  }
-
-  const house = new House();
   expect(house.door.name).toBe("door");
 });
 
@@ -208,4 +173,48 @@ it("injected fields should be available inside constructor", () => {
 
   const house = new House("rural");
   expect(house.name).toBe("rural house with wooden large red door");
+});
+
+it("should register factory without decorator", () => {
+  const C = new ContainerInstance();
+
+  class DoorFactory {
+    public produce(): IDoor {
+      return { name: "door" };
+    }
+  }
+  C.registerFactory("door", DoorFactory);
+
+  class House {
+    @C.Inject("door")
+    public door!: IDoor;
+  }
+
+  const house = new House();
+  expect(house.door.name).toBe("door");
+});
+
+it("should register class without decorator", () => {
+  const C = new ContainerInstance();
+
+  class Door {
+    private static index = 0;
+    public readonly name: string;
+
+    constructor() {
+      Door.index += 1;
+      this.name = `door ${Door.index}`;
+    }
+  }
+  C.registerClass("door", Door);
+
+  class House {
+    @C.Inject("door")
+    public door!: IDoor;
+  }
+
+  const house1 = new House();
+  const house2 = new House();
+  expect(house1.door.name).toBe("door 1");
+  expect(house1.door.name).toBe(house2.door.name);
 });

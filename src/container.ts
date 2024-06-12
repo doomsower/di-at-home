@@ -24,27 +24,21 @@ export class ContainerInstance<IM extends Mapping = any> {
   #instances: Map<keyof IM, any> = new Map();
 
   public Injectable =
-    (key: keyof IM) => (target: any, context: ClassDecoratorContext) => {
-      if (this.#injectables.has(key)) {
-        throw new Error(`injectable '${context.name}' already registered`);
-      }
-      this.#injectables.set(key, { type: "class", cls: target });
+    (key: keyof IM) => (target: any, _context: ClassDecoratorContext) => {
+      this.registerClass(key, target);
       return target;
     };
 
   public Factory =
     <K extends keyof IM, F extends FactoryClass<any, IM[K]>>(key: K) =>
-    (target: F, context: ClassDecoratorContext) => {
-      if (this.#injectables.has(key)) {
-        throw new Error(`injectable '${context.name}' already registered`);
-      }
-      this.#injectables.set(key, { type: "factory", factory: new target() });
+    (target: F, _context: ClassDecoratorContext) => {
+      this.registerFactory(key, target);
       return target;
     };
 
   public Inject =
     <K extends EmptyArrayKeys<IM>>(key: K) =>
-    (target: undefined, context: ClassFieldDecoratorContext) => {
+    (_target: undefined, context: ClassFieldDecoratorContext) => {
       if (context.private) {
         throw new Error(
           `cannot inject into private field '${String(context.name)}'`,
@@ -60,7 +54,7 @@ export class ContainerInstance<IM extends Mapping = any> {
 
   public Transient =
     <K extends keyof IM>(key: K, ...args: IM[K]) =>
-    (target: undefined, context: ClassFieldDecoratorContext) => {
+    (_target: undefined, context: ClassFieldDecoratorContext) => {
       if (context.private) {
         throw new Error(
           `cannot inject into private field '${String(context.name)}'`,
@@ -72,6 +66,26 @@ export class ContainerInstance<IM extends Mapping = any> {
         this[fieldName] = instance;
       });
     };
+
+  public registerFactory(
+    key: string | number | symbol,
+    factory: FactoryClass<any, any>,
+  ): void {
+    if (this.#injectables.has(key)) {
+      throw new Error(`injectable '${factory.name}' already registered`);
+    }
+    this.#injectables.set(key, { type: "factory", factory: new factory() });
+  }
+
+  public registerClass(
+    key: string | number | symbol,
+    target: new (...args: any[]) => any,
+  ): void {
+    if (this.#injectables.has(key)) {
+      throw new Error(`injectable '${target.name}' already registered`);
+    }
+    this.#injectables.set(key, { type: "class", cls: target });
+  }
 
   public set(key: string, instance: any): void {
     if (this.#instances.has(key)) {

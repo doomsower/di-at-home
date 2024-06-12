@@ -1,6 +1,6 @@
 {
   "name": "di-at-home",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Simple dependency injection using ECMAscript decorators",
   "keywords": [
     "di",
