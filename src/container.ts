@@ -67,19 +67,19 @@ export class ContainerInstance<IM extends Mapping = any> {
       });
     };
 
-  public registerFactory(
-    key: string | number | symbol,
-    factory: FactoryClass<any, any>,
-  ): void {
+  public registerFactory<
+    K extends keyof IM,
+    F extends FactoryClass<any, IM[K]>,
+  >(key: K, factory: F): void {
     if (this.#injectables.has(key)) {
       throw new Error(`injectable '${factory.name}' already registered`);
     }
     this.#injectables.set(key, { type: "factory", factory: new factory() });
   }
 
-  public registerClass(
-    key: string | number | symbol,
-    target: new (...args: any[]) => any,
+  public registerClass<K extends keyof IM>(
+    key: K,
+    target: new (...args: IM[K]) => any,
   ): void {
     if (this.#injectables.has(key)) {
       throw new Error(`injectable '${target.name}' already registered`);
