@@ -22,6 +22,7 @@ interface Mapping {
 export class ContainerInstance<IM extends Mapping = any> {
   #injectables: Map<keyof IM, InjectableEntry<any, any>> = new Map();
   #instances: Map<keyof IM, any> = new Map();
+  #factories: Map<keyof IM, FactoryClass<any, any>> = new Map();
 
   public Injectable =
     (key: keyof IM) => (target: any, _context: ClassDecoratorContext) => {
@@ -73,10 +74,10 @@ export class ContainerInstance<IM extends Mapping = any> {
     K extends keyof IM,
     F extends FactoryClass<any, IM[K]>,
   >(key: K, factory: F): void {
-    if (this.#injectables.has(key)) {
+    if (this.#factories.has(key)) {
       throw new Error(`injectable '${factory.name}' already registered`);
     }
-    this.#injectables.set(key, { type: "factory", factory: new factory() });
+    this.#factories.set(key, factory);
   }
 
   public registerClass<K extends keyof IM>(
@@ -104,12 +105,21 @@ export class ContainerInstance<IM extends Mapping = any> {
 
   public create<K extends keyof IM>(key: K, ...args: IM[K]): any {
     const entry = this.#injectables.get(key);
-    if (!entry) {
-      throw new Error(`injectable '${String(key)}' not registered`);
+    if (entry?.type === "class") {
+      return new entry.cls(...args);
     }
-    return entry.type === "class"
-      ? new entry.cls(...args)
-      : entry.factory.produce(...args);
+    let factory: IFactory<any, IM[K]>;
+    if (entry) {
+      factory = entry.factory;
+    } else {
+      const factoryClass = this.#factories.get(key);
+      if (!factoryClass) {
+        throw new Error(`injectable ${String(key)} not registered`);
+      }
+      factory = new factoryClass();
+      this.#injectables.set(key, { type: "factory", factory });
+    }
+    return factory.produce(...args);
   }
 }
 
